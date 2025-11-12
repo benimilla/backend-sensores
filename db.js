@@ -1,20 +1,40 @@
-import mysql from "mysql2";
-import dotenv from "dotenv";
-dotenv.config();
+import sqlite3 from "sqlite3";
+import { open } from "sqlite";
 
-export const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT,
+export const db = await open({
+  filename: "./orquideas.db", // se guarda en la raíz del proyecto
+  driver: sqlite3.Database
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error("❌ Error conectando a MySQL:", err);
-  } else {
-    console.log("✅ Conectado a MySQL");
-  }
-});
-//aaaa
+// ✅ Crear tablas si no existen
+await db.exec(`
+CREATE TABLE IF NOT EXISTS usuarios (
+  id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT,
+  email TEXT
+);
+
+CREATE TABLE IF NOT EXISTS sensores (
+  id_sensor INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre_sensor TEXT,
+  tipo_conexion TEXT,
+  ubicacion TEXT
+);
+
+CREATE TABLE IF NOT EXISTS lecturas (
+  id_lectura INTEGER PRIMARY KEY AUTOINCREMENT,
+  id_sensor INTEGER,
+  humedad REAL,
+  temperatura REAL,
+  fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS calendario_riego (
+  id_riego INTEGER PRIMARY KEY AUTOINCREMENT,
+  dia_semana TEXT,
+  hora_riego TEXT,
+  activo INTEGER DEFAULT 1
+);
+`);
+
+console.log("✅ Base de datos SQLite lista");
